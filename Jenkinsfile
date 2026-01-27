@@ -20,8 +20,6 @@ pipeline {
             steps {
                 sh '''
                 ls
-                cd app-code
-                ls
                 docker build -t $IMAGE_NAME:latest .
                 '''
             }
