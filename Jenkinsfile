@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKERHUB = credentials('dockerhub-creds')
-        IMAGE_NAME = "airo-swaraj/notes-app"
+        IMAGE_NAME = "airoswaraj/notes-app"
     }
 
     stages {
