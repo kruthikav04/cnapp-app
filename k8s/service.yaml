@@ -3,10 +3,9 @@ kind: Service
 metadata:
   name: notes-app-service
 spec:
+  type: LoadBalancer
   selector:
     app: notes-app
   ports:
     - port: 80
       targetPort: 5000
-      protocol: TCP
-  type: NodePort
