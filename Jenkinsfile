@@ -4,6 +4,9 @@ pipeline {
     environment {
         DOCKERHUB = credentials('dockerhub-creds')
         IMAGE_NAME = "airoswaraj/notes-app"
+        KUBECONFIG = "${WORKSPACE}/kubeconfig"
+        AWS_REGION = "ap-south-1"
+        CLUSTER_NAME = "cnapp-cluster"
     }
 
     stages {
@@ -19,7 +22,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                docker build -t $IMAGE_NAME:latest .
+                docker build -t $IMAGE_NAME:${BUILD_NUMBER} .
                 '''
             }
         }
@@ -27,9 +30,40 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 sh '''
-                docker push $IMAGE_NAME:latest
+                docker push $IMAGE_NAME:${BUILD_NUMBER}
+                '''
+            }
+        }
+
+        stage('Configure Kubeconfig') {
+            steps {
+                sh '''
+                aws eks update-kubeconfig \
+                  --region $AWS_REGION \
+                  --name $CLUSTER_NAME \
+                  --kubeconfig $KUBECONFIG
+                '''
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                sh '''
+                kubectl set image deployment/notes-app \
+                  notes-app=$IMAGE_NAME:${BUILD_NUMBER}
+
+                kubectl rollout status deployment/notes-app
                 '''
             }
         }
     }
+
+    post {
+        always {
+            sh '''
+            rm -f $KUBECONFIG
+            '''
+        }
+    }
 }
+
