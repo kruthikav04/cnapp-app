@@ -38,11 +38,6 @@ pipeline {
                 ]) {
 
                     sh '''
-                    # Install CLI if not present
-                    if ! command -v lacework &> /dev/null
-                    then
-                        curl -s https://raw.githubusercontent.com/lacework/go-sdk/main/cli/install.sh | sudo bash
-                    fi
 
                     export LW_ACCOUNT=$LACEWORK_ACCOUNT
                     export LW_API_KEY=$LW_ACCESS
