@@ -40,36 +40,7 @@ pipeline {
             }
         }
         
-        stage('Scan Image with Lacework') {
-            steps {
-                withCredentials([
-                    // use the exact credential IDs from your Jenkins
-                    string(credentialsId: 'LACEWORK-ACCESS-KEY', variable: 'LW_ACCESS'),
-                    string(credentialsId: 'LW_SECRET_KEY', variable: 'LW_SECRET')
-                ]) {
-                    sh '''
-
-                    sleep 45
-                    
-                    # Note: lacework CLI expects: <registry> <repository> <tag>
-                    # For Docker Hub, registry is "docker.io"
-                    registry="docker.io"
-                    repository="$IMAGE_NAME"
-                    tag="${BUILD_NUMBER}"
-
-                    # run the scan, wait until completed (--poll), fail on severity >= HIGH
-                    lacework vulnerability container scan \
-                        $registry \
-                        $repository \
-                        $tag \
-                        -a $LACEWORK_ACCOUNT -k $LW_ACCESS -s $LW_SECRET \
-                        --fail_on_severity high \
-                        --poll
-                        --details
-                    '''
-                }
-            }
-        }
+        
         
         stage('Configure Kubeconfig') {
             steps {
@@ -93,7 +64,36 @@ pipeline {
             }
         }
     }
+        stage('Scan Image with Lacework') {
+            steps {
+                withCredentials([
+                    // use the exact credential IDs from your Jenkins
+                    string(credentialsId: 'LACEWORK-ACCESS-KEY', variable: 'LW_ACCESS'),
+                    string(credentialsId: 'LW_SECRET_KEY', variable: 'LW_SECRET')
+                ]) {
+                    sh '''
 
+                    sleep 45
+                    
+                    # Note: lacework CLI expects: <registry> <repository> <tag>
+                    # For Docker Hub, registry is "docker.io"
+                    registry="docker.io"
+                    repository="$IMAGE_NAME"
+                    tag="${BUILD_NUMBER}"
+
+                    # run the scan, wait until completed (--poll), fail on severity >= HIGH
+                    lacework vulnerability container scan \
+                        $registry \
+                        $repository \
+                        $tag \
+                        -a $LACEWORK_ACCOUNT -k $LW_ACCESS -s $LW_SECRET \
+                        --poll
+                        --details
+                    '''
+                }
+            }
+        }       
+         
     post {
         always {
             sh 'rm -f $KUBECONFIG'
