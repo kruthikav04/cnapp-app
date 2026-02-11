@@ -4,7 +4,7 @@ metadata:
   name: notes-app
 spec:
   type: LoadBalancer
-  loadBalancerIP: <STATIC_IP_HERE>
+  loadBalancerIP: 20.110.175.203
   ports:
     - port: 5000
       targetPort: 5000
