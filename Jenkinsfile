@@ -8,6 +8,7 @@ pipeline {
         ACR_NAME = "cnappacr2026"
         LACEWORK_ACCOUNT = "719551"
         TENANT_ID = "981439d1-88ac-4c7c-bd5d-d5df66bc0f4c"
+        SUBSCRIPTION_ID = "442c2f42-962b-4a21-bea5-db44a51fb466"
     }
 
     stages {
@@ -28,7 +29,7 @@ pipeline {
                         --password $AZURE_CLIENT_SECRET \
                         --tenant $TENANT_ID
 
-                    az account set --subscription "Kruthika's-Subscription"
+                    az account set --subscription $SUBSCRIPTION_ID
                     '''
                 }
             }
@@ -63,10 +64,10 @@ pipeline {
 
                     sh '''
                     set -e
-                    sleep 20
+                    sleep 5
 
                     lacework vulnerability container scan \
-                        $ACR_NAME.azurecr.io \
+                        cnappacr2026.azurecr.io \
                         notes-app \
                         ${BUILD_NUMBER} \
                         -a $LACEWORK_ACCOUNT \
@@ -107,8 +108,22 @@ pipeline {
                 '''
             }
         }
+
+        stage('Cleanup Docker Images') {
+            steps {
+                sh '''
+                docker system prune -f || true
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo "Deployment completed successfully 🚀
+            echo "Deployment completed successfully"
+        }
+        failure {
+            echo "Pipeline failed"
+        }
+    }
+}
