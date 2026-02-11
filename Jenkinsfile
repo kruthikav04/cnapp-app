@@ -14,7 +14,7 @@ pipeline {
         stage('Azure Login') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'azure-sp-creds', // Make sure this exists in Jenkins
+                    credentialsId: 'azure-sp-creds',
                     usernameVariable: 'AZURE_CLIENT_ID',
                     passwordVariable: 'AZURE_CLIENT_SECRET'
                 )]) {
@@ -31,7 +31,7 @@ pipeline {
 
         stage('Login to ACR') {
             steps {
-                sh 'az acr login --name $ACR_NAME'
+                sh '''az acr login --name $ACR_NAME'''
             }
         }
 
@@ -61,5 +61,18 @@ pipeline {
                   --name $AKS_CLUSTER \
                   --overwrite-existing
 
-                # Check if deployment exists
                 if kubectl get deployment notes-app; then
+                  echo "Updating existing deployment..."
+                  kubectl set image deployment/notes-app notes-app=$IMAGE_NAME:${BUILD_NUMBER}
+                else
+                  echo "Creating new deployment..."
+                  kubectl create deployment notes-app --image=$IMAGE_NAME:${BUILD_NUMBER}
+                  kubectl expose deployment notes-app --type=LoadBalancer --port=5000 --target-port=5000
+                fi
+
+                kubectl rollout status deployment/notes-app
+                '''
+            }
+        }
+    }
+}
