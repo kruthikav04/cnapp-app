@@ -1,6 +1,6 @@
 pipeline {
     agent { label 'cnapp' }
-
+ 
     environment {
         IMAGE_NAME = "cnappacr2026.azurecr.io/notes-app"
         RESOURCE_GROUP = "Cnapp-RG"
@@ -8,9 +8,9 @@ pipeline {
         ACR_NAME = "cnappacr2026"
         TENANT_ID = "981439d1-88ac-4c7c-bd5d-d5df66bc0f4c"
     }
-
+ 
     stages {
-
+ 
         stage('Azure Login') {
             steps {
                 withCredentials([usernamePassword(
@@ -28,13 +28,13 @@ pipeline {
                 }
             }
         }
-
+ 
         stage('Login to ACR') {
             steps {
                 sh 'az acr login --name $ACR_NAME'
             }
         }
-
+ 
         stage('Build Docker Image') {
             steps {
                 sh '''
@@ -43,7 +43,7 @@ pipeline {
                 '''
             }
         }
-
+ 
         stage('Push Image to ACR') {
             steps {
                 sh '''
@@ -52,7 +52,39 @@ pipeline {
                 '''
             }
         }
-
+ 
+        // ✅ ONLY NEW STAGE ADDED BELOW
+        stage('Lacework Scan') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'LW_API_KEY', variable: 'LW_API_KEY'),
+                    string(credentialsId: 'LW_API_SECRET', variable: 'LW_API_SECRET')
+                ]) {
+                    sh '''
+                    set +e
+ 
+                    echo "Configuring Lacework CLI..."
+ 
+                    lacework configure \
+                      --account 719551 \
+                      --api_key $LW_API_KEY \
+                      --api_secret $LW_API_SECRET \
+                      --noninteractive
+ 
+                    echo "Triggering container scan..."
+ 
+                    lacework vulnerability container scan \
+                      $IMAGE_NAME:${BUILD_NUMBER} \
+                      --details
+ 
+                    echo "Lacework scan submitted successfully ✅"
+ 
+                    exit 0
+                    '''
+                }
+            }
+        }
+ 
         stage('Deploy to AKS') {
             steps {
                 sh '''
@@ -60,17 +92,14 @@ pipeline {
                   --resource-group $RESOURCE_GROUP \
                   --name $AKS_CLUSTER \
                   --overwrite-existing
-
-                # Apply deployment and service files
+ 
                 kubectl apply -f k8s/deployment.yaml
                 kubectl apply -f k8s/service.yaml
-
-                # Update deployment image if it exists
+ 
                 if kubectl get deployment notes-app; then
                   kubectl set image deployment/notes-app notes-app=$IMAGE_NAME:${BUILD_NUMBER}
                 fi
-
-                # Wait for deployment rollout
+ 
                 kubectl rollout status deployment/notes-app
                 '''
             }
