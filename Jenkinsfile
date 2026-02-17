@@ -53,7 +53,7 @@ pipeline {
             }
         }
  
-        // ✅ ONLY NEW STAGE ADDED BELOW
+        // ✅ ONLY FIX APPLIED HERE
         stage('Lacework Scan') {
             steps {
                 withCredentials([
@@ -74,7 +74,9 @@ pipeline {
                     echo "Triggering container scan..."
  
                     lacework vulnerability container scan \
-                      $IMAGE_NAME:${BUILD_NUMBER} \
+                      cnappacr2026.azurecr.io \
+                      notes-app \
+                      ${BUILD_NUMBER} \
                       --details
  
                     echo "Lacework scan submitted successfully ✅"
