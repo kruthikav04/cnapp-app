@@ -46,7 +46,7 @@ pipeline {
                 '''
             }
         }
-        // ✅ ONLY THIS STAGE MODIFIED
+
         stage('Lacework Scan') {
             steps {
                 withCredentials([
@@ -71,6 +71,14 @@ pipeline {
                 }
             }
         }
+ 
+        // ✅ EXTRA STAGE ADDED 
+        stage('Lacework Plugin Scan') {
+            steps {
+                laceworkScanner imageName: "${IMAGE_NAME}:${BUILD_NUMBER}"
+            }
+        }
+ 
         stage('Deploy to AKS') {
             steps {
                 sh '''
