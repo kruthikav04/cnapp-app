@@ -75,7 +75,7 @@ pipeline {
         // ✅ EXTRA STAGE ADDED 
         stage('Lacework Plugin Scan') {
             steps {
-                laceworkScanner imageName: "${IMAGE_NAME}:${BUILD_NUMBER}"
+                lacework imageName: "${IMAGE_NAME}:${BUILD_NUMBER}"
             }
         }
  
