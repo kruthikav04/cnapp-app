@@ -53,26 +53,32 @@ pipeline {
             }
         }
 
+        // ✅ ONLY THIS STAGE MODIFIED
         stage('Lacework Scan') {
             steps {
                 withCredentials([
-                    string(credentialsId: 'LW_API_KEY', variable: 'LW_API_KEY'),
-                    string(credentialsId: 'LW_API_SECRET', variable: 'LW_API_SECRET')
+                    string(credentialsId: 'LW_ACCESS_TOKEN', variable: 'LW_ACCESS_TOKEN'),
+                    string(credentialsId: 'LW_ACCOUNT_NAME', variable: 'LW_ACCOUNT_NAME')
                 ]) {
                     sh '''
-                    set +e
-                    echo "Triggering Lacework container scan..."
-                    lacework vulnerability container scan \
-                        cnappacr2026.azurecr.io \
-                        notes-app \
+                    echo "Downloading Lacework inline scanner..."
+                    curl -L https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
+                    chmod +x lw-scanner
+
+                    echo "Running Lacework CI scan..."
+
+                    ./lw-scanner image evaluate \
+                        $IMAGE_NAME \
                         ${BUILD_NUMBER} \
-                        --account 719551 \
-                        --api_key $LW_API_KEY \
-                        --api_secret $LW_API_SECRET \
-                        --details \
-                        --poll
+                        --account-name $LW_ACCOUNT_NAME \
+                        --access-token $LW_ACCESS_TOKEN \
+                        --build-id ${BUILD_NUMBER} \
+                        --build-plan cnapp-app \
+                        --ci-build \
+                        --save \
+                        --fail-on-violation-exit-code 0
+
                     echo "Lacework scan completed"
-                    exit 0
                     '''
                 }
             }
