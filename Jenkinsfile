@@ -73,10 +73,8 @@ pipeline {
         // ✅ EXTRA STAGE (FIXED)
         stage('Lacework Plugin Scan') {
             steps {
-                sh 'az acr login --name $ACR_NAME'
-
                 lacework(
-                    imageName: "${IMAGE_NAME}",
+                    imageName: "notes-app",
                     imageTag: "${BUILD_NUMBER}",
                     fixableOnly: false,
                     customFlags: "--fail-on-violation-exit-code 0",
