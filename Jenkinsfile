@@ -46,7 +46,7 @@ pipeline {
                 '''
             }
         }
-
+ 
         stage('Lacework Scan') {
             steps {
                 withCredentials([
@@ -71,14 +71,23 @@ pipeline {
                 }
             }
         }
- 
-        // ✅ EXTRA STAGE ADDED 
+        // ✅ EXTRA STAGE (FIXED)
         stage('Lacework Plugin Scan') {
             steps {
-                lacework imageName: "${IMAGE_NAME}:${BUILD_NUMBER}"
+                lacework(
+                    imageName: "${IMAGE_NAME}",
+                    imageTag: "${BUILD_NUMBER}",
+                    fixableOnly: false,
+                    customFlags: "",
+                    noPull: false,
+                    evaluatePolicies: true,
+                    saveToLacework: true,
+                    disableLibraryPackageScanning: false,
+                    showEvaluationExceptions: true,
+                    tags: ""
+                )
             }
         }
- 
         stage('Deploy to AKS') {
             steps {
                 sh '''
