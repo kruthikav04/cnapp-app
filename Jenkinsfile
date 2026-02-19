@@ -78,17 +78,21 @@ pipeline {
                         --save \
                         --fail-on-violation-exit-code 0
 
+                    echo "Preparing env.list for IaC scan..."
+
+                    echo "LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME" > env.list
+                    echo "LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN" >> env.list
+                    echo "LW_BUILD_ID=${BUILD_NUMBER}" >> env.list
+                    echo "LW_BUILD_PLAN=cnapp-app" >> env.list
+                    echo "LW_CI_BUILD=true" >> env.list
+
                     echo "Running Lacework IaC Scan (Kubernetes YAML)..."
 
                     docker run --rm \
-                        -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
-                        -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
-                        -e LW_BUILD_ID=${BUILD_NUMBER} \
-                        -e LW_BUILD_PLAN=cnapp-app \
-                        -e LW_CI_BUILD=true \
-                        -v $(pwd):/workspace \
-                        lacework/codesec:latest \
-                        scan iac  /workspace/k8s
+                        --env-file env.list \
+                        -v $(pwd):/app/src \
+                        lacework/codesec-iac:stable \
+                        lacework iac scan --directory=/app/src/k8s
 
                     echo "Lacework scans completed"
                     '''
