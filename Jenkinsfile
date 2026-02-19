@@ -78,7 +78,7 @@ pipeline {
                     imageTag: "${BUILD_NUMBER}",
                     fixableOnly: false,
                     customFlags: "--fail-on-violation-exit-code 0",
-                    noPull: false,
+                    noPull: true,
                     evaluatePolicies: false,
                     saveToLacework: true,
                     disableLibraryPackageScanning: false,
