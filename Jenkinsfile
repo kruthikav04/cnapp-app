@@ -53,7 +53,7 @@ pipeline {
             }
         }
 
-        // ✅ ONLY THIS STAGE MODIFIED
+        // ✅ Lacework Stage (Image + IaC Scan)
         stage('Lacework Scan') {
             steps {
                 withCredentials([
@@ -65,7 +65,7 @@ pipeline {
                     curl -L https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
                     chmod +x lw-scanner
 
-                    echo "Running Lacework CI scan..."
+                    echo "Running Lacework Image Scan..."
 
                     ./lw-scanner image evaluate \
                         $IMAGE_NAME \
@@ -78,7 +78,19 @@ pipeline {
                         --save \
                         --fail-on-violation-exit-code 0
 
-                    echo "Lacework scan completed"
+                    echo "Running Lacework IaC Scan (Kubernetes YAML)..."
+
+                    ./lw-scanner iac scan k8s \
+                        --directory ./k8s \
+                        --account-name $LW_ACCOUNT_NAME \
+                        --access-token $LW_ACCESS_TOKEN \
+                        --build-id ${BUILD_NUMBER} \
+                        --build-plan cnapp-app \
+                        --ci-build \
+                        --save \
+                        --fail-on-violation-exit-code 0
+
+                    echo "Lacework scans completed"
                     '''
                 }
             }
