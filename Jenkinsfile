@@ -25,11 +25,13 @@ pipeline {
                 }
             }
         }
+
         stage('Login to ACR') {
             steps {
                 sh 'az acr login --name $ACR_NAME'
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 sh '''
@@ -38,6 +40,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Push Image to ACR') {
             steps {
                 sh '''
@@ -45,7 +48,7 @@ pipeline {
                 '''
             }
         }
- 
+
         stage('Lacework Scan') {
             steps {
                 withCredentials([
@@ -70,23 +73,33 @@ pipeline {
                 }
             }
         }
-        // ✅ EXTRA STAGE (FIXED)
+
+        // ✅ REPLACED PLUGIN WITH OFFICIAL INLINE SCANNER
         stage('Lacework Plugin Scan') {
             steps {
-                lacework(
-                    imageName: "notes-app",
-                    imageTag: "${BUILD_NUMBER}",
-                    fixableOnly: false,
-                    customFlags: "--fail-on-violation-exit-code 0",
-                    noPull: false,
-                    evaluatePolicies: false,
-                    saveToLacework: true,
-                    disableLibraryPackageScanning: false,
-                    showEvaluationExceptions: true,
-                    tags: ""
-                )
+                withCredentials([
+                    string(credentialsId: 'LW_API_KEY', variable: 'LW_API_KEY'),
+                    string(credentialsId: 'LW_API_SECRET', variable: 'LW_API_SECRET')
+                ]) {
+                    sh '''
+                    echo "Running Lacework Inline Scanner for CI/CD visibility..."
+
+                    docker run --rm \
+                      -v /var/run/docker.sock:/var/run/docker.sock \
+                      lacework/lacework-inline-scanner:latest \
+                      image evaluate notes-app ${BUILD_NUMBER} \
+                      --account-name 719551 \
+                      --api-key $LW_API_KEY \
+                      --api-secret $LW_API_SECRET \
+                      --build-id ${BUILD_NUMBER} \
+                      --build-plan cnapp-app \
+                      --save \
+                      --fail-on-violation-exit-code 0
+                    '''
+                }
             }
         }
+
         stage('Deploy to AKS') {
             steps {
                 sh '''
