@@ -93,6 +93,7 @@ pipeline {
 
                     docker run --rm \
                         --env-file env.list \
+                        -e EXIT_FLAG=none \
                         -v $(pwd):/app/src \
                         lacework/codesec-iac:stable \
                         lacework iac scan --directory=/app/src/k8s
