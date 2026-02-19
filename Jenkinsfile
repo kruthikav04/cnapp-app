@@ -94,7 +94,8 @@ pipeline {
                     docker run --rm \
                         --env-file env.list \
                         -v $(pwd):/app/src \
-                        lacework/codesec-iac:stable
+                        lacework/codesec-iac:stable \
+                        lacework iac scan --directory=/app/src/k8s
 
                     echo "Lacework scans completed"
                     '''
