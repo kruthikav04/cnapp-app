@@ -58,7 +58,9 @@ pipeline {
             steps {
                 withCredentials([
                     string(credentialsId: 'LW_ACCESS_TOKEN', variable: 'LW_ACCESS_TOKEN'),
-                    string(credentialsId: 'LW_ACCOUNT_NAME', variable: 'LW_ACCOUNT_NAME')
+                    string(credentialsId: 'LW_ACCOUNT_NAME', variable: 'LW_ACCOUNT_NAME'),
+                    string(credentialsId: 'LW_API_KEY', variable: 'LW_API_KEY'),
+                    string(credentialsId: 'LW_API_SECRET', variable: 'LW_API_SECRET')
                 ]) {
                     sh '''
                     echo "Downloading Lacework inline scanner..."
@@ -80,19 +82,19 @@ pipeline {
 
                     echo "Preparing env.list for IaC scan..."
 
-                    echo "LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME" > env.list
-                    echo "LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN" >> env.list
-                    echo "LW_BUILD_ID=${BUILD_NUMBER}" >> env.list
-                    echo "LW_BUILD_PLAN=cnapp-app" >> env.list
-                    echo "LW_CI_BUILD=true" >> env.list
+                    echo "LW_ACCOUNT=$LW_ACCOUNT_NAME" > env.list
+                    echo "LW_API_KEY=$LW_API_KEY" >> env.list
+                    echo "LW_API_SECRET=$LW_API_SECRET" >> env.list
+                    echo "SCAN_COMMAND=k8s-scan" >> env.list
+                    echo "WORKSPACE=/app/src" >> env.list
+                    echo "SCAN_DIR=k8s" >> env.list
 
                     echo "Running Lacework IaC Scan (Kubernetes YAML)..."
 
                     docker run --rm \
                         --env-file env.list \
                         -v $(pwd):/app/src \
-                        lacework/codesec-iac:stable \
-                        lacework iac scan --directory=/app/src/k8s
+                        lacework/codesec-iac:stable
 
                     echo "Lacework scans completed"
                     '''
