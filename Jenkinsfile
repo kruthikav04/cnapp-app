@@ -85,7 +85,6 @@ pipeline {
                     disableLibraryPackageScanning: false,
                     showEvaluationExceptions: true,
                     tags: ""
-                    failOnViolation: false
                 )
             }
         }
