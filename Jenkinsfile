@@ -86,9 +86,9 @@ pipeline {
                         -e LW_BUILD_ID=${BUILD_NUMBER} \
                         -e LW_BUILD_PLAN=cnapp-app \
                         -e LW_CI_BUILD=true \
-                        -v $(pwd):/app \
+                        -v $(pwd):/workspace \
                         lacework/codesec:latest \
-                        lacework iac scan --directory /app/k8s
+                        scan iac  /workspace/k8s
 
                     echo "Lacework scans completed"
                     '''
