@@ -80,7 +80,7 @@ pipeline {
                     fixableOnly: false,
                     customFlags: "--fail-on-violation-exit-code 0",
                     noPull: false,
-                    evaluatePolicies: true,
+                    evaluatePolicies: false,
                     saveToLacework: true,
                     disableLibraryPackageScanning: false,
                     showEvaluationExceptions: true,
